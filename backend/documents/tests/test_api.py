@@ -10,7 +10,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from documents import services
 from documents.constants import MAX_FILE_SIZE
 from documents.models import Document, DocumentStatus
-from documents.tests.factories import UploadFileFactory
+from documents.tests.factories import DocumentFactory, UploadFileFactory
 
 pytestmark = pytest.mark.anyio
 
@@ -43,8 +43,12 @@ async def test_upload_saves_file_and_document(
     response = await upload(client, upload_file)
 
     assert response.status_code == 201
-    assert response.json()["file_name"] == upload_file["filename"]
-    document = await session.get(Document, UUID(response.json()["id"]))
+    body = response.json()
+    assert set(body) == {"id", "file_name", "status"}
+    assert body["file_name"] == upload_file["filename"]
+    assert body["status"] == DocumentStatus.pending
+
+    document = await session.get(Document, UUID(body["id"]))
     assert document is not None
     assert document.status == DocumentStatus.pending
     assert document.file_name == upload_file["filename"]
@@ -95,3 +99,25 @@ async def test_upload_rejects_invalid_file(
     assert response.status_code == status_code
     assert (await session.exec(select(Document))).all() == []
     assert list(documents_dir.iterdir()) == []
+
+
+async def test_list_documents(client: AsyncClient) -> None:
+    documents = await DocumentFactory.create_batch(3)
+
+    response = await client.get("/api/documents/")
+
+    assert response.status_code == 200
+    expected = [
+        {"id": str(document.id), "file_name": document.file_name, "status": document.status}
+        for document in documents
+    ]
+    assert sorted(response.json(), key=lambda item: item["id"]) == sorted(
+        expected, key=lambda item: item["id"]
+    )
+
+
+async def test_list_documents_returns_empty_list(client: AsyncClient) -> None:
+    response = await client.get("/api/documents/")
+
+    assert response.status_code == 200
+    assert response.json() == []
