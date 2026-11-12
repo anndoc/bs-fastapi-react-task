@@ -1,5 +1,5 @@
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from fastapi import UploadFile
 from fastapi.concurrency import run_in_threadpool
@@ -19,3 +19,14 @@ async def create_document(session: AsyncSession, file: UploadFile) -> Document:
     session.add(document)
     await session.commit()
     return document
+
+
+async def delete_document(session: AsyncSession, document_id: UUID) -> bool:
+    document = await session.get(Document, document_id)
+    if document is None:
+        return False
+    path = Path(document.path)
+    await session.delete(document)
+    await session.commit()
+    await run_in_threadpool(path.unlink, missing_ok=True)
+    return True

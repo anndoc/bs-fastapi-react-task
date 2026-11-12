@@ -1,15 +1,14 @@
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
 import sqlmodel
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "d11059b9f2ab"
-down_revision: Union[str, Sequence[str], None] = None
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = None
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -23,9 +22,9 @@ def upgrade() -> None:
             sa.Enum("pending", "processing", "completed", "failed", name="documentstatus"),
             nullable=False,
         ),
-        sa.Column("path", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("file_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("error", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+        sa.Column("path", sqlmodel.AutoString(), nullable=False),
+        sa.Column("file_name", sqlmodel.AutoString(), nullable=False),
+        sa.Column("error", sqlmodel.AutoString(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
     # ### end Alembic commands ###

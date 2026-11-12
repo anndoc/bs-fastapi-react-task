@@ -1,22 +1,22 @@
-from typing import AsyncGenerator, Any
+from collections.abc import AsyncGenerator
 
 import pytest
 import sqlalchemy
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from .factories import AsyncSQLAlchemyModelFactory
 from ..db import get_session
 from ..main import app
 from ..settings import settings
+from .factories import AsyncSQLAlchemyModelFactory
 
 engine = create_async_engine(settings.test_database_url)
 
 
-async def override_get_session() -> AsyncGenerator[AsyncSession, None]:
+async def override_get_session() -> AsyncGenerator[AsyncSession]:
     async with AsyncSession(engine, expire_on_commit=False) as session:
         yield session
 
@@ -25,12 +25,12 @@ app.dependency_overrides[get_session] = override_get_session
 
 
 @pytest.fixture(scope="session", autouse=True)
-def anyio_backend():
+def anyio_backend() -> str:
     return "asyncio"
 
 
 @pytest.fixture(scope="session", autouse=True)
-async def setup_database():
+async def setup_database() -> AsyncGenerator[None]:
     db_name = engine.url.database
     _engine = create_async_engine(
         engine.url._replace(database="postgres"), isolation_level="AUTOCOMMIT"
@@ -58,12 +58,12 @@ async def setup_database():
 
 
 @pytest.fixture(autouse=True)
-async def session() -> AsyncGenerator[AsyncSession, Any]:
+async def session() -> AsyncGenerator[AsyncSession]:
     async with AsyncSession(engine, expire_on_commit=False) as session:
         # Ensure that all factories use the same session
         for factory in AsyncSQLAlchemyModelFactory.__subclasses__():
             factory._meta.sqlalchemy_session = session
-            factory.reset_sequence(0)
+            factory.reset_sequence(0)  # type: ignore[no-untyped-call]
 
         yield session
 
@@ -71,11 +71,11 @@ async def session() -> AsyncGenerator[AsyncSession, Any]:
 
         tables = ", ".join([table.name for table in SQLModel.metadata.sorted_tables])
         # truncate all tables
-        await session.exec(sqlalchemy.text(f"TRUNCATE {tables} CASCADE;"))
+        await (await session.connection()).execute(text(f"TRUNCATE {tables} CASCADE;"))
         await session.commit()
 
 
 @pytest.fixture(scope="function")
-async def client() -> AsyncGenerator[AsyncClient, Any]:
+async def client() -> AsyncGenerator[AsyncClient]:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
