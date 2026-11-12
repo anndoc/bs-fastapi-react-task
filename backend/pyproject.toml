@@ -16,8 +16,11 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "factory-boy>=3.3.3",
+    "httpx>=0.28.1",
     "mypy>=2.4.1",
     "pre-commit>=4.3.0",
+    "pytest>=9.2.0",
     "ruff>=0.17.4",
 ]
 

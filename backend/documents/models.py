@@ -15,4 +15,5 @@ class Document(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     status: DocumentStatus = Field(default=DocumentStatus.pending)
     path: str
-    error: str | None = None
+    file_name: str
+    error: str = Field(default="")
