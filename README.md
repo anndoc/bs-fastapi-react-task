@@ -138,3 +138,19 @@ These features are not mandatory but can demonstrate additional senior-level exp
 - Document-level access control.
 - Retrieval evaluation using a small predefined question/answer dataset.
 - Background task retries and recovery from processing failures.
+
+## Document processing worker
+
+`common.worker` makes a single pass over pending (and stale processing) documents
+and exits, so something external has to run it on a schedule. With cron, every 10
+minutes:
+
+```cron
+*/10 * * * * cd /path/to/repo/backend && flock -n /tmp/bs-worker.lock /path/to/uv run python -m common.worker >> /var/log/bs-worker.log 2>&1
+```
+
+- `cd` is required: settings are read from `backend/.env`.
+- `flock -n` skips a run while the previous one is still going.
+- Use the absolute path to `uv` (`which uv`), since cron runs with a minimal `PATH`.
+
+To run a single pass manually: `uv run python -m common.worker` from `backend/`.

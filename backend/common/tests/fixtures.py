@@ -4,7 +4,7 @@ import pytest
 import sqlalchemy
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -14,10 +14,13 @@ from ..settings import settings
 from .factories import AsyncSQLAlchemyModelFactory
 
 engine = create_async_engine(settings.test_database_url)
+session_factory = async_sessionmaker(
+    engine, class_=AsyncSession, expire_on_commit=False
+)
 
 
 async def override_get_session() -> AsyncGenerator[AsyncSession]:
-    async with AsyncSession(engine, expire_on_commit=False) as session:
+    async with session_factory() as session:
         yield session
 
 
@@ -42,7 +45,9 @@ async def setup_database() -> AsyncGenerator[None]:
             )
         )
         if not is_database_exists:
-            await conn.execute(sqlalchemy.text(f"CREATE DATABASE {db_name} ENCODING 'utf8' "))
+            await conn.execute(
+                sqlalchemy.text(f"CREATE DATABASE {db_name} ENCODING 'utf8' ")
+            )
 
     async with engine.begin() as conn:
         # Required by the pgvector columns on the embedding tables.
@@ -77,5 +82,7 @@ async def session() -> AsyncGenerator[AsyncSession]:
 
 @pytest.fixture(scope="function")
 async def client() -> AsyncGenerator[AsyncClient]:
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
         yield client

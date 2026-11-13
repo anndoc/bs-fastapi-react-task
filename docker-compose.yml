@@ -16,6 +16,11 @@ services:
       timeout: 5s
       retries: 10
 
+#  document-processor:
+#    build: .
+#    command: python -m common.worker
+#    restart: unless-stopped
+
 volumes:
   postgres_data:
   media_data:  # backend media dir, mounted once the backend runs in a container

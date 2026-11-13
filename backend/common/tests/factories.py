@@ -27,8 +27,12 @@ class AsyncSQLAlchemyModelFactory[ModelT](SQLAlchemyModelFactory):
         return instance
 
     @classmethod
-    async def _create(cls, model_class: type[ModelT], *args: object, **kwargs: object) -> ModelT:
-        resolved_args = [await value if inspect.isawaitable(value) else value for value in args]
+    async def _create(
+        cls, model_class: type[ModelT], *args: object, **kwargs: object
+    ) -> ModelT:
+        resolved_args = [
+            await value if inspect.isawaitable(value) else value for value in args
+        ]
         resolved_kwargs = {
             key: await value if inspect.isawaitable(value) else value
             for key, value in kwargs.items()

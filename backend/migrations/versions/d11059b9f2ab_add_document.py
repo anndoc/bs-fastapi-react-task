@@ -19,7 +19,9 @@ def upgrade() -> None:
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column(
             "status",
-            sa.Enum("pending", "processing", "completed", "failed", name="documentstatus"),
+            sa.Enum(
+                "pending", "processing", "completed", "failed", name="documentstatus"
+            ),
             nullable=False,
         ),
         sa.Column("path", sqlmodel.AutoString(), nullable=False),

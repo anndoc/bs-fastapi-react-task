@@ -16,7 +16,9 @@ async def validated_upload(file: Annotated[UploadFile, File()]) -> UploadFile:
     if not file.size:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "File is empty")
     if file.size > MAX_FILE_SIZE:
-        raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, "File must not exceed 10 MB")
+        raise HTTPException(
+            status.HTTP_413_CONTENT_TOO_LARGE, "File must not exceed 10 MB"
+        )
     return file
 
 

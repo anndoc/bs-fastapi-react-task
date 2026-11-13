@@ -2,7 +2,7 @@ from uuid import UUID
 
 from sqlmodel import SQLModel
 
-from documents.models import DocumentStatus
+from documents.constants import DocumentStatus
 
 
 class Document(SQLModel, table=False):
