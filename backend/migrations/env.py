@@ -7,6 +7,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import SQLModel
 
+import agent.models  # noqa: F401
 import documents.models  # noqa: F401
 from common.settings import settings
 

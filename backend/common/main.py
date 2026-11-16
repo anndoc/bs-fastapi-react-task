@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+import agent.api
 import documents.api
 from common.db import engine
 from documents.constants import DOCUMENTS_DIR
@@ -18,3 +19,4 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(documents.api.router, prefix="/api/documents")
+app.include_router(agent.api.router, prefix="/api/chat")

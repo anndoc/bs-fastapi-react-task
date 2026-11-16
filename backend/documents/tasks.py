@@ -79,7 +79,10 @@ async def read_pages(path: Path, skip: int) -> AsyncIterator[str]:
 
 
 async def embed_pages(session: AsyncSession, document: Document) -> None:
-    """Embed pages one transaction each, skipping pages already embedded by an earlier attempt."""
+    """
+    Embed pages one transaction each,
+    skipping pages already embedded by an earlier attempt.
+    """
     embedded_pages = (
         await session.exec(
             select(func.coalesce(func.max(Embedding.page), 0)).where(
@@ -98,6 +101,7 @@ async def embed_pages(session: AsyncSession, document: Document) -> None:
             )
             for chunk, vector in zip(chunks, vectors, strict=True)
         )
-        # Keeps the document from being reclaimed as stale while it's still being processed.
+        # Keeps the document from being reclaimed as stale
+        # while it's still being processed.
         document.modified_at = datetime.now(UTC)
         await session.commit()

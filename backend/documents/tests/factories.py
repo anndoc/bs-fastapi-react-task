@@ -3,7 +3,7 @@ from factory.declarations import LazyAttribute, Trait
 from factory.faker import Faker
 
 from common.tests.factories import AsyncSQLAlchemyModelFactory
-from documents.models import Document
+from documents.models import Document, Embedding
 
 
 class DocumentFactory(AsyncSQLAlchemyModelFactory[Document]):
@@ -15,6 +15,13 @@ class DocumentFactory(AsyncSQLAlchemyModelFactory[Document]):
 
     class Meta:
         model = Document
+
+
+class EmbeddingFactory(AsyncSQLAlchemyModelFactory[Embedding]):
+    page = 1
+
+    class Meta:
+        model = Embedding
 
 
 class UploadFileFactory(DictFactory):
