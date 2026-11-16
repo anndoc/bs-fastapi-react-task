@@ -1,6 +1,13 @@
+from datetime import datetime
 from uuid import UUID
 
 from sqlmodel import SQLModel
+
+
+class SessionSummary(SQLModel, table=False):
+    id: UUID
+    title: str
+    modified_at: datetime
 
 
 class Source(SQLModel, table=False):

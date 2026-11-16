@@ -1,6 +1,7 @@
 import asyncio
 import json
 from collections.abc import AsyncIterator
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -201,3 +202,31 @@ async def test_chat_rejects_empty_query(client: AsyncClient) -> None:
     response = await client.post("/api/chat/", params={"query": ""})
 
     assert response.status_code == 422
+
+
+async def test_history_lists_sessions_newest_first(client: AsyncClient) -> None:
+    older = await SessionHistoryFactory.create(
+        title="Older", modified_at=datetime(2024, 1, 1, tzinfo=UTC)
+    )
+    newer = await SessionHistoryFactory.create(
+        title="Newer", modified_at=datetime(2024, 1, 2, tzinfo=UTC)
+    )
+
+    response = await client.get("/api/chat/")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert set(body[0]) == {"id", "title", "modified_at"}
+    assert [item["id"] for item in body] == [str(newer.id), str(older.id)]
+    assert [item["title"] for item in body] == ["Newer", "Older"]
+    assert [datetime.fromisoformat(item["modified_at"]) for item in body] == [
+        newer.modified_at,
+        older.modified_at,
+    ]
+
+
+async def test_history_returns_empty_list(client: AsyncClient) -> None:
+    response = await client.get("/api/chat/")
+
+    assert response.status_code == 200
+    assert response.json() == []

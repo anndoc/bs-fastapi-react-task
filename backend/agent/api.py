@@ -7,6 +7,7 @@ import anyio
 from fastapi import APIRouter, Query, status
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from langchain_core.language_models import FakeListChatModel
+from sqlmodel import col, select
 
 from agent.constants import (
     NO_CONTEXT_ANSWER,
@@ -16,6 +17,8 @@ from agent.constants import (
     MessageRole,
 )
 from agent.dependencies import ChatSessionDep
+from agent.models import SessionHistory
+from agent.schemas import SessionSummary
 from agent.services import add_message, search_chunks
 from common.db import SessionDep
 
@@ -83,10 +86,19 @@ async def chat(
 
 
 @router.get("/", status_code=status.HTTP_200_OK)
-async def history():
-    pass
+async def history(session: SessionDep) -> list[SessionSummary]:
+    rows = (
+        await session.exec(
+            select(SessionHistory).order_by(col(SessionHistory.modified_at).desc())
+        )
+    ).all()
+    return [
+        SessionSummary(id=row.id, title=row.title, modified_at=row.modified_at)
+        for row in rows
+    ]
 
 
 @router.delete("/{session_id}", status_code=status.HTTP_201_CREATED)
 async def remove_chat():
+    # delete SessionHistory by id
     pass
