@@ -66,6 +66,7 @@ Use appropriate request/response schemas, validation, and error handling.
 ## 3. Technical Requirements
 
 ### Backend
+
 - Python 3.11+ and FastAPI.
 - Use Pydantic for data validation.
 - Use PostgreSQL for persistent application data.
@@ -75,6 +76,7 @@ Use appropriate request/response schemas, validation, and error handling.
 - Use environment variables for configuration and API keys.
 
 ### Frontend
+
 - React with TypeScript.
 - Use a modern component-based architecture.
 - Implement document management and chat interfaces.
@@ -82,6 +84,7 @@ Use appropriate request/response schemas, validation, and error handling.
 - Provide a clean and intuitive user experience.
 
 ### AI / RAG
+
 - Implement document chunking and embedding generation.
 - Implement semantic search.
 - Include source attribution in generated answers.

@@ -49,8 +49,8 @@ Backend commands run from `backend/` unless noted.
   - **Document what's there, never the diff.** Documentation of how code was removed
     or changed to fix a bug or add a feature is not useful and difficult to maintain.
   - **Documentation should live close to the source as possible.**
-  The archetype worth keeping: one line on a statement that looks removable but
-  isn't, saying what breaks if you remove it.  
+    The archetype worth keeping: one line on a statement that looks removable but
+    isn't, saying what breaks if you remove it.
 - **Keep Code Simple**
   - Avoid creating separate functions for trivial operations that are used only once.
   - If an operation can be expressed clearly in 1–2 lines, prefer inline code over a dedicated function.

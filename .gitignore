@@ -104,3 +104,8 @@ devenv.local.nix
 
 # direnv
 .direnv
+
+# React Router
+node_modules/
+.react-router/
+.agents/
