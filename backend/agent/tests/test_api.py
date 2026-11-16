@@ -230,3 +230,20 @@ async def test_history_returns_empty_list(client: AsyncClient) -> None:
 
     assert response.status_code == 200
     assert response.json() == []
+
+
+async def test_delete_chat_removes_session(
+    client: AsyncClient, session: AsyncSession
+) -> None:
+    chat_session = await SessionHistoryFactory.create(title="Hi")
+
+    response = await client.delete(f"/api/chat/{chat_session.id}")
+
+    assert response.status_code == 204
+    assert (await session.exec(select(SessionHistory))).all() == []
+
+
+async def test_delete_chat_returns_404(client: AsyncClient) -> None:
+    response = await client.delete(f"/api/chat/{uuid4()}")
+
+    assert response.status_code == 404

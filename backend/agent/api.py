@@ -98,7 +98,7 @@ async def history(session: SessionDep) -> list[SessionSummary]:
     ]
 
 
-@router.delete("/{session_id}", status_code=status.HTTP_201_CREATED)
-async def remove_chat():
-    # delete SessionHistory by id
-    pass
+@router.delete("/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_chat(session: SessionDep, chat_session: ChatSessionDep) -> None:
+    await session.delete(chat_session)
+    await session.commit()
