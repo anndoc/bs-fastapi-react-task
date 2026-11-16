@@ -1,3 +1,4 @@
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -7,6 +8,11 @@ import agent.api
 import documents.api
 from common.db import engine
 from documents.constants import DOCUMENTS_DIR
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
 
 
 @asynccontextmanager

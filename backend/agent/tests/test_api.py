@@ -57,7 +57,7 @@ def model(monkeypatch: pytest.MonkeyPatch) -> None:
 async def chat(
     client: AsyncClient, query: str = QUERY, **params: str
 ) -> list[tuple[str, object]]:
-    response = await client.post("/api/chat/", params={"query": query, **params})
+    response = await client.post("/api/chat/", params=params, json={"query": query})
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
     events = []
@@ -191,7 +191,7 @@ async def test_chat_returns_404_for_unknown_session(
     client: AsyncClient, session: AsyncSession
 ) -> None:
     response = await client.post(
-        "/api/chat/", params={"query": QUERY, "session_id": str(uuid4())}
+        "/api/chat/", params={"session_id": str(uuid4())}, json={"query": QUERY}
     )
 
     assert response.status_code == 404
@@ -199,7 +199,7 @@ async def test_chat_returns_404_for_unknown_session(
 
 
 async def test_chat_rejects_empty_query(client: AsyncClient) -> None:
-    response = await client.post("/api/chat/", params={"query": ""})
+    response = await client.post("/api/chat/", json={"query": ""})
 
     assert response.status_code == 422
 
@@ -230,6 +230,31 @@ async def test_history_returns_empty_list(client: AsyncClient) -> None:
 
     assert response.status_code == 200
     assert response.json() == []
+
+
+async def test_retrieve_chat_returns_session_with_messages(
+    client: AsyncClient,
+) -> None:
+    messages = [
+        {"role": "user", "content": "Hi"},
+        {"role": "assistant", "content": "Hello!"},
+    ]
+    chat_session = await SessionHistoryFactory.create(title="Hi", messages=messages)
+
+    response = await client.get(f"/api/chat/{chat_session.id}")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == str(chat_session.id)
+    assert body["title"] == "Hi"
+    assert datetime.fromisoformat(body["modified_at"]) == chat_session.modified_at
+    assert body["messages"] == messages
+
+
+async def test_retrieve_chat_returns_404(client: AsyncClient) -> None:
+    response = await client.get(f"/api/chat/{uuid4()}")
+
+    assert response.status_code == 404
 
 
 async def test_delete_chat_removes_session(

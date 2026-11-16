@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from typing import Annotated
 
 import anyio
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, Body, status
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from langchain_core.language_models import FakeListChatModel
 from sqlmodel import col, select
@@ -18,7 +18,7 @@ from agent.constants import (
 )
 from agent.dependencies import ChatSessionDep
 from agent.models import SessionHistory
-from agent.schemas import SessionSummary
+from agent.schemas import Message, SessionDetail, SessionSummary
 from agent.services import add_message, search_chunks
 from common.db import SessionDep
 
@@ -39,7 +39,7 @@ model = FakeListChatModel(  # todo change it later
 async def chat(
     session: SessionDep,
     chat_session: ChatSessionDep,
-    query: Annotated[str, Query(min_length=1)],
+    query: Annotated[str, Body(min_length=1, embed=True)],
 ) -> AsyncGenerator[ServerSentEvent]:
     chat_session.title = chat_session.title or query[:TITLE_MAX_LENGTH]
     chat_session.cancelled = False
@@ -96,6 +96,16 @@ async def history(session: SessionDep) -> list[SessionSummary]:
         SessionSummary(id=row.id, title=row.title, modified_at=row.modified_at)
         for row in rows
     ]
+
+
+@router.get("/{session_id}", status_code=status.HTTP_200_OK)
+async def retrieve_chat(chat_session: ChatSessionDep) -> SessionDetail:
+    return SessionDetail(
+        id=chat_session.id,
+        title=chat_session.title,
+        modified_at=chat_session.modified_at,
+        messages=[Message.model_validate(message) for message in chat_session.messages],
+    )
 
 
 @router.delete("/{session_id}", status_code=status.HTTP_204_NO_CONTENT)

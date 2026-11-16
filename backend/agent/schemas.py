@@ -3,11 +3,22 @@ from uuid import UUID
 
 from sqlmodel import SQLModel
 
+from agent.constants import MessageRole
+
 
 class SessionSummary(SQLModel, table=False):
     id: UUID
     title: str
     modified_at: datetime
+
+
+class Message(SQLModel, table=False):
+    role: MessageRole
+    content: str
+
+
+class SessionDetail(SessionSummary):
+    messages: list[Message]
 
 
 class Source(SQLModel, table=False):
