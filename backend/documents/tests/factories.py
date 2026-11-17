@@ -9,6 +9,7 @@ from documents.models import Document, Embedding
 class DocumentFactory(AsyncSQLAlchemyModelFactory[Document]):
     id = Faker("uuid4")  # type: ignore[no-untyped-call]
     file_name = Faker("file_name", extension="txt")  # type: ignore[no-untyped-call]
+    size = 1024
     path = LazyAttribute(  # type: ignore[no-untyped-call]
         lambda obj: f"media/documents/{obj.id}.txt"
     )

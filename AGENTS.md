@@ -31,6 +31,10 @@ Backend commands run from `backend/` unless noted.
 - `uv run ruff check --fix && uv run ruff format` — lint and format.
 - `uv run mypy .` — type check.
 
+Frontend commands run from `frontend/`
+- `npm run typecheck` — generate route types and type check.
+- `npm test` — run Vitest unit tests (`__tests__/**/*.test.ts`).
+
 ## Code style
 
 - **Comments only when non-obvious** — well-named identifiers do the work.

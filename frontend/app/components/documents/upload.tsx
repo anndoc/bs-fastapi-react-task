@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { UploadCloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FILE_TYPES } from "@/components/documents/types";
 
 export default function Upload({
   onFiles,
@@ -44,11 +45,13 @@ export default function Upload({
       >
         Choose Files
       </Button>
-      <p className="mt-2 text-xs text-slate-500">Supported formats: PDF, TXT</p>
+      <p className="mt-2 text-xs text-slate-500">
+        Supported formats: {FILE_TYPES.join(", ").toUpperCase()}
+      </p>
       <input
         ref={fileInput}
         type="file"
-        accept=".pdf,.txt,application/pdf,text/plain"
+        accept={FILE_TYPES.map((type) => `.${type}`).join(",")}
         multiple
         className="hidden"
         onChange={(event) => {

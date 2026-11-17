@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   isRouteErrorResponse,
   Links,
@@ -5,9 +7,11 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useRevalidator,
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import { Button } from "@/components/ui/button";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -42,34 +46,52 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: { queries: { staleTime: 60_000 } },
+      }),
+  );
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <div className="min-h-screen bg-[#f7f8fc] p-3 text-slate-950 md:p-4">
+        <div className="mx-auto grid min-h-[calc(100vh-2rem)] max-w-[1800px] grid-cols-1 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:grid-cols-[minmax(340px,430px)_minmax(0,1fr)]">
+          <Outlet />
+        </div>
+      </div>
+    </QueryClientProvider>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
-  let stack: string | undefined;
-
-  if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details =
-      error.status === 404
-        ? "The requested page could not be found."
-        : error.statusText || details;
-  } else if (import.meta.env.DEV && error && error instanceof Error) {
-    details = error.message;
-    stack = error.stack;
-  }
+  const revalidator = useRevalidator();
+  const notFound = isRouteErrorResponse(error) && error.status === 404;
+  const details = notFound
+    ? "The requested page could not be found."
+    : isRouteErrorResponse(error)
+      ? `The server responded with ${error.status}${error.statusText ? ` ${error.statusText}` : ""}.`
+      : error instanceof Error
+        ? error.message
+        : "An unexpected error occurred.";
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
-      {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
-        </pre>
-      )}
-    </main>
+    <div className="flex min-h-screen items-center justify-center bg-[#f7f8fc] p-4 text-slate-950">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+        <h1 className="text-lg font-semibold">
+          {notFound ? "404" : "Something went wrong"}
+        </h1>
+        <p className="mt-2 text-sm text-slate-600">{details}</p>
+        {!notFound && (
+          <Button
+            className="mt-4"
+            onClick={() => revalidator.revalidate()}
+            disabled={revalidator.state === "loading"}
+          >
+            {revalidator.state === "loading" ? "Retrying…" : "Try again"}
+          </Button>
+        )}
+      </div>
+    </div>
   );
 }

@@ -26,6 +26,7 @@ def upgrade() -> None:
         ),
         sa.Column("path", sqlmodel.AutoString(), nullable=False),
         sa.Column("file_name", sqlmodel.AutoString(), nullable=False),
+        sa.Column("size", sa.Integer(), nullable=False),
         sa.Column("error", sqlmodel.AutoString(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )

@@ -1,25 +1,30 @@
 import { Check, LoaderCircle, Trash2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { DocStatus, DocumentItem } from "@/components/documents/list";
+import {
+  STATUS_LABELS,
+  type DocumentItem,
+  type DocumentStatusLabel,
+  type FileType,
+} from "@/components/documents/types";
 
-function StatusBadge({ status }: { status: DocStatus }) {
-  const styles: Record<DocStatus, string> = {
-    Pending: "border-amber-200 bg-amber-50 text-amber-700",
-    Processing: "border-blue-200 bg-blue-50 text-blue-700",
-    Completed: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    Failed: "border-rose-200 bg-rose-50 text-rose-700",
+function StatusBadge({ status }: { status: DocumentStatusLabel }) {
+  const styles: Record<DocumentStatusLabel, string> = {
+    [STATUS_LABELS.pending]: "border-amber-200 bg-amber-50 text-amber-700",
+    [STATUS_LABELS.processing]: "border-blue-200 bg-blue-50 text-blue-700",
+    [STATUS_LABELS.completed]: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    [STATUS_LABELS.failed]: "border-rose-200 bg-rose-50 text-rose-700",
   };
   return (
     <Badge
       variant="outline"
       className={`gap-1.5 rounded-full px-2.5 py-1 font-medium ${styles[status]}`}
     >
-      {status === "Processing" ? (
+      {status === STATUS_LABELS.processing ? (
         <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
-      ) : status === "Completed" ? (
+      ) : status === STATUS_LABELS.completed ? (
         <Check className="h-3.5 w-3.5" />
-      ) : status === "Failed" ? (
+      ) : status === STATUS_LABELS.failed ? (
         <X className="h-3.5 w-3.5" />
       ) : (
         <span className="h-1.5 w-1.5 rounded-full bg-current" />
@@ -29,20 +34,25 @@ function StatusBadge({ status }: { status: DocStatus }) {
   );
 }
 
-function FileGlyph({ type }: { type: "pdf" | "txt" }) {
+const GLYPH_STYLES: Record<FileType, { box: string; label: string }> = {
+  pdf: { box: "border-red-100 bg-red-50 text-red-500", label: "bg-red-500" },
+  txt: {
+    box: "border-slate-200 bg-slate-100 text-slate-500",
+    label: "bg-slate-500",
+  },
+};
+
+function FileGlyph({ type }: { type: FileType }) {
+  const { box, label } = GLYPH_STYLES[type];
   return (
     <div
-      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${type === "pdf" ? "border-red-100 bg-red-50 text-red-500" : "border-slate-200 bg-slate-100 text-slate-500"}`}
+      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${box}`}
     >
-      {type === "pdf" ? (
-        <span className="rounded bg-red-500 px-1 py-1.5 text-[9px] font-bold leading-none text-white">
-          PDF
-        </span>
-      ) : (
-        <span className="rounded bg-slate-500 px-1 py-1.5 text-[9px] font-bold leading-none text-white">
-          TXT
-        </span>
-      )}
+      <span
+        className={`rounded px-1 py-1.5 text-[9px] font-bold uppercase leading-none text-white ${label}`}
+      >
+        {type}
+      </span>
     </div>
   );
 }
@@ -52,7 +62,7 @@ export default function Document({
   onDelete,
 }: {
   doc: DocumentItem;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
 }) {
   return (
     <div className="flex items-center gap-3 py-3">

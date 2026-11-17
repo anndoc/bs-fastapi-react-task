@@ -2,23 +2,14 @@ import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Document from "@/components/documents/document";
-
-export type DocStatus = "Pending" | "Processing" | "Completed" | "Failed";
-export type DocumentItem = {
-  id: number;
-  name: string;
-  size: string;
-  uploaded: string;
-  status: DocStatus;
-  type: "pdf" | "txt";
-};
+import type { DocumentItem } from "@/components/documents/types";
 
 export default function DocumentList({
   documents,
   onDelete,
 }: {
   documents: DocumentItem[];
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
 }) {
   return (
     <>

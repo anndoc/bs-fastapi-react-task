@@ -15,21 +15,17 @@ router = APIRouter()
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def upload_document(session: SessionDep, file: ValidatedUpload) -> Document:
     document = await create_document(session, file)
-    return Document(
-        id=document.id, file_name=document.file_name, status=document.status
-    )
+    return Document.model_validate(document)
 
 
 @router.get("/", status_code=status.HTTP_200_OK)
 async def list_documents(session: SessionDep) -> list[Document]:
     rows = (
         await session.exec(
-            select(models.Document).order_by(col(models.Document.created_at))
+            select(models.Document).order_by(col(models.Document.created_at).desc())
         )
     ).all()
-    return [
-        Document(id=row.id, file_name=row.file_name, status=row.status) for row in rows
-    ]
+    return [Document.model_validate(row) for row in rows]
 
 
 @router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)

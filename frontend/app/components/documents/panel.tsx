@@ -1,9 +1,18 @@
 import { useState } from "react";
-import DocumentList, {
-  type DocStatus,
-  type DocumentItem,
-} from "@/components/documents/list";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import DocumentList from "@/components/documents/list";
+import {
+  DOCUMENTS_KEY,
+  POLL_INTERVAL_MS,
+  getFileType,
+  type DocumentItem, STATUS_LABELS,
+} from "@/components/documents/types";
 import Upload from "@/components/documents/upload";
+import { deleteDocument, documentList, uploadDocument } from "@/lib/documents/api";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,70 +24,56 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const initialDocs: DocumentItem[] = [
-  {
-    id: 1,
-    name: "Product Documentation.pdf",
-    size: "2.4 MB",
-    uploaded: "Uploaded 2 min ago",
-    status: "Processing",
-    type: "pdf",
-  },
-  {
-    id: 2,
-    name: "API Reference.txt",
-    size: "185 KB",
-    uploaded: "Uploaded 10 min ago",
-    status: "Completed",
-    type: "txt",
-  },
-  {
-    id: 3,
-    name: "Company Policies.pdf",
-    size: "1.8 MB",
-    uploaded: "Uploaded 1 hour ago",
-    status: "Completed",
-    type: "pdf",
-  },
-  {
-    id: 4,
-    name: "Meeting Notes.txt",
-    size: "78 KB",
-    uploaded: "Uploaded 1 day ago",
-    status: "Failed",
-    type: "txt",
-  },
-];
+export default function DocumentPanel({
+  initialDocuments,
+}: {
+  initialDocuments: DocumentItem[];
+}) {
+  const queryClient = useQueryClient();
+  const { data: documents } = useQuery({
+    queryKey: DOCUMENTS_KEY,
+    queryFn: documentList,
+    initialData: initialDocuments,
+    refetchInterval: ({ state }) =>
+      state.data?.some(
+        (doc) => doc.status === STATUS_LABELS.pending || doc.status === STATUS_LABELS.processing,
+      )
+        ? POLL_INTERVAL_MS
+        : false,
+  });
+  const upload = useMutation({
+    mutationFn: uploadDocument,
+    onSuccess: (uploaded) =>
+      queryClient.setQueryData<DocumentItem[]>(DOCUMENTS_KEY, (current = []) => [
+        uploaded,
+        ...current,
+      ]),
+  });
+  const remove = useMutation({
+    mutationFn: deleteDocument,
+    onSuccess: (_, id) =>
+      queryClient.setQueryData<DocumentItem[]>(DOCUMENTS_KEY, (current = []) =>
+        current.filter((doc) => doc.id !== id),
+      ),
+  });
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [uploadErrors, setUploadErrors] = useState<string[]>([]);
 
-export default function DocumentPanel() {
-  const [documents, setDocuments] = useState(initialDocs);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
-
-  const addFiles = (files: FileList | File[]) => {
-    const accepted = Array.from(files).filter((file) =>
-      /\.(pdf|txt)$/i.test(file.name),
-    );
-    setDocuments((current) => [
-      ...accepted.map((file, index) => ({
-        id: Date.now() + index,
-        name: file.name,
-        size:
-          file.size < 1024 * 1024
-            ? `${Math.max(1, Math.round(file.size / 1024))} KB`
-            : `${(file.size / 1024 / 1024).toFixed(1)} MB`,
-        uploaded: "Uploaded just now",
-        status: "Pending" as DocStatus,
-        type: file.name.toLowerCase().endsWith(".pdf")
-          ? ("pdf" as const)
-          : ("txt" as const),
-      })),
-      ...current,
-    ]);
+  const addFiles = async (files: FileList | File[]) => {
+    setUploadErrors([]);
+    for (const file of Array.from(files)) {
+      if (!getFileType(file.name)) continue;
+      try {
+        await upload.mutateAsync(file);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        setUploadErrors((current) => [...current, `${file.name}: ${message}`]);
+      }
+    }
   };
 
   const removeDocument = () => {
-    if (deleteId !== null)
-      setDocuments((current) => current.filter((doc) => doc.id !== deleteId));
+    if (deleteId !== null) remove.mutate(deleteId);
     setDeleteId(null);
   };
 
@@ -93,6 +88,18 @@ export default function DocumentPanel() {
           </p>
         </header>
         <Upload onFiles={addFiles} />
+        {uploadErrors.length > 0 && (
+          <ul className="-mt-5 mb-6 space-y-1 text-sm text-rose-600">
+            {uploadErrors.map((message, index) => (
+              <li key={index}>{message}</li>
+            ))}
+          </ul>
+        )}
+        {remove.error && (
+          <p className="-mt-5 mb-6 text-sm text-rose-600">
+            {remove.error.message}
+          </p>
+        )}
 
         <DocumentList documents={documents} onDelete={setDeleteId} />
       </section>

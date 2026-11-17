@@ -13,6 +13,7 @@ class Document(TimeStampedModel, table=True):
     status: DocumentStatus = Field(default=DocumentStatus.pending)
     path: str
     file_name: str
+    size: int
     error: str = Field(default="")
 
     embeddings: list[Embedding] = Relationship(

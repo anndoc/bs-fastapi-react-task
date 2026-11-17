@@ -13,9 +13,12 @@ async def create_document(session: AsyncSession, file: UploadFile) -> Document:
     file_name = file.filename or ""
     document_id = uuid4()
     path = DOCUMENTS_DIR / f"{document_id}{Path(file_name).suffix.lower()}"
-    await run_in_threadpool(path.write_bytes, await file.read())
+    content = await file.read()
+    await run_in_threadpool(path.write_bytes, content)
 
-    document = Document(id=document_id, path=str(path), file_name=file_name)
+    document = Document(
+        id=document_id, path=str(path), file_name=file_name, size=len(content)
+    )
     session.add(document)
     await session.commit()
     return document

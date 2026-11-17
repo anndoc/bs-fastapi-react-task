@@ -1,9 +1,11 @@
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
 
 import pytest
 from httpx import AsyncClient, Response
+from pydantic import TypeAdapter
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -48,8 +50,9 @@ async def test_upload_saves_file_and_document(
 
     assert response.status_code == 201
     body = response.json()
-    assert set(body) == {"id", "file_name", "status"}
+    assert set(body) == {"id", "file_name", "size", "status", "modified_at"}
     assert body["file_name"] == upload_file["filename"]
+    assert body["size"] == len(upload_file["content"])
     assert body["status"] == DocumentStatus.pending
 
     document = await session.get(Document, UUID(body["id"]))
@@ -110,7 +113,11 @@ async def test_upload_rejects_invalid_file(
 
 
 async def test_list_documents(client: AsyncClient) -> None:
-    documents = await DocumentFactory.acreate_batch(3)
+    now = datetime.now(UTC)
+    oldest = await DocumentFactory.create(created_at=now - timedelta(hours=2))
+    newest = await DocumentFactory.create(created_at=now)
+    middle = await DocumentFactory.create(created_at=now - timedelta(hours=1))
+    documents = [newest, middle, oldest]
 
     response = await client.get("/api/documents/")
 
@@ -119,13 +126,15 @@ async def test_list_documents(client: AsyncClient) -> None:
         {
             "id": str(document.id),
             "file_name": document.file_name,
+            "size": document.size,
             "status": document.status,
+            "modified_at": TypeAdapter(datetime).dump_python(
+                document.modified_at, mode="json"
+            ),
         }
         for document in documents
     ]
-    assert sorted(response.json(), key=lambda item: item["id"]) == sorted(
-        expected, key=lambda item: item["id"]
-    )
+    assert response.json() == expected
 
 
 async def test_list_documents_returns_empty_list(client: AsyncClient) -> None:

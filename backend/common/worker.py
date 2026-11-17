@@ -4,6 +4,7 @@ import logging
 from sqlmodel import col, select
 
 from common.db import session_factory
+from common.logging import setup_logging
 from documents.conditions import is_claimable
 from documents.models import Document
 from documents.tasks import process_document
@@ -31,5 +32,5 @@ async def process() -> None:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    setup_logging()
     asyncio.run(process())
