@@ -1,18 +1,19 @@
 import { useState } from "react";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import DocumentList from "@/components/documents/list";
 import {
   DOCUMENTS_KEY,
   POLL_INTERVAL_MS,
   getFileType,
-  type DocumentItem, STATUS_LABELS,
+  type DocumentItem,
+  STATUS_LABELS,
 } from "@/components/documents/types";
 import Upload from "@/components/documents/upload";
-import { deleteDocument, documentList, uploadDocument } from "@/lib/documents/api";
+import {
+  deleteDocument,
+  documentList,
+  uploadDocument,
+} from "@/lib/documents/api";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,11 +25,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+export type DocumentPanelProps = {
+  initialDocuments: DocumentItem[];
+};
+
 export default function DocumentPanel({
   initialDocuments,
-}: {
-  initialDocuments: DocumentItem[];
-}) {
+}: DocumentPanelProps) {
   const queryClient = useQueryClient();
   const { data: documents } = useQuery({
     queryKey: DOCUMENTS_KEY,
@@ -36,7 +39,9 @@ export default function DocumentPanel({
     initialData: initialDocuments,
     refetchInterval: ({ state }) =>
       state.data?.some(
-        (doc) => doc.status === STATUS_LABELS.pending || doc.status === STATUS_LABELS.processing,
+        (doc) =>
+          doc.status === STATUS_LABELS.pending ||
+          doc.status === STATUS_LABELS.processing,
       )
         ? POLL_INTERVAL_MS
         : false,
@@ -44,10 +49,10 @@ export default function DocumentPanel({
   const upload = useMutation({
     mutationFn: uploadDocument,
     onSuccess: (uploaded) =>
-      queryClient.setQueryData<DocumentItem[]>(DOCUMENTS_KEY, (current = []) => [
-        uploaded,
-        ...current,
-      ]),
+      queryClient.setQueryData<DocumentItem[]>(
+        DOCUMENTS_KEY,
+        (current = []) => [uploaded, ...current],
+      ),
   });
   const remove = useMutation({
     mutationFn: deleteDocument,
@@ -79,7 +84,7 @@ export default function DocumentPanel({
 
   return (
     <>
-      <section className="flex min-h-[700px] flex-col border-b border-slate-200 p-5 sm:p-6 lg:border-b-0 lg:border-r">
+      <section className="flex min-h-[700px] flex-col border-b border-slate-200 p-5 sm:p-6 lg:min-h-0 lg:overflow-y-auto lg:border-b-0 lg:border-r">
         <header className="mb-7">
           <h1 className="text-2xl font-bold tracking-tight">Documents</h1>
           <p className="mt-1.5 max-w-md text-sm leading-relaxed text-slate-600">

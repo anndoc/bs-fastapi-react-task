@@ -2,6 +2,7 @@ import asyncio
 import json
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
+from unittest.mock import ANY
 from uuid import uuid4
 
 import pytest
@@ -12,9 +13,9 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from agent import api
-from agent.constants import NO_CONTEXT_ANSWER, ChatEvent
+from agent.constants import NO_CONTEXT_ANSWER, ChatEvent, MessageRole
 from agent.models import SessionHistory
-from agent.tests.factories import SessionHistoryFactory
+from agent.tests.factories import SessionHistoryFactory, build_message
 from documents.constants import DocumentStatus
 from documents.models import Document
 from documents.tasks import embeddings
@@ -91,8 +92,8 @@ async def test_chat_starts_session_and_streams_answer_with_sources(
     ]
     assert chat_session.title == QUERY
     assert chat_session.messages == [
-        {"role": "user", "content": QUERY},
-        {"role": "assistant", "content": "Paris"},
+        {"id": ANY, "role": "user", "content": QUERY, "created_at": ANY},
+        {"id": ANY, "role": "assistant", "content": "Paris", "created_at": ANY},
     ]
     assert not chat_session.cancelled
 
@@ -101,8 +102,8 @@ async def test_chat_continues_existing_session(
     client: AsyncClient, session: AsyncSession, document: Document
 ) -> None:
     previous = [
-        {"role": "user", "content": "Hi"},
-        {"role": "assistant", "content": "Hello!"},
+        build_message(MessageRole.user, "Hi"),
+        build_message(MessageRole.assistant, "Hello!"),
     ]
     chat_session = await SessionHistoryFactory.create(title="Hi", messages=previous)
 
@@ -114,8 +115,8 @@ async def test_chat_continues_existing_session(
     assert saved.title == "Hi"
     assert saved.messages == [
         *previous,
-        {"role": "user", "content": QUERY},
-        {"role": "assistant", "content": "Paris"},
+        {"id": ANY, "role": "user", "content": QUERY, "created_at": ANY},
+        {"id": ANY, "role": "assistant", "content": "Paris", "created_at": ANY},
     ]
 
 
@@ -149,7 +150,12 @@ async def test_chat_streams_reasoning_separately_from_answer(
         (ChatEvent.done, None),
     ]
     chat_session = (await session.exec(select(SessionHistory))).one()
-    assert chat_session.messages[-1] == {"role": "assistant", "content": "Paris"}
+    assert chat_session.messages[-1] == {
+        "id": ANY,
+        "role": "assistant",
+        "content": "Paris",
+        "created_at": ANY,
+    }
 
 
 async def test_chat_sends_stop_when_model_fails(
@@ -164,7 +170,9 @@ async def test_chat_sends_stop_when_model_fails(
 
     assert events[-1] == (ChatEvent.stop, "Failed to generate an answer")
     chat_session = (await session.exec(select(SessionHistory))).one()
-    assert chat_session.messages == [{"role": "user", "content": QUERY}]
+    assert chat_session.messages == [
+        {"id": ANY, "role": "user", "content": QUERY, "created_at": ANY}
+    ]
 
 
 async def test_chat_saves_partial_answer_when_cancelled(
@@ -182,8 +190,8 @@ async def test_chat_saves_partial_answer_when_cancelled(
     assert saved is not None
     assert saved.cancelled
     assert saved.messages == [
-        {"role": "user", "content": QUERY},
-        {"role": "assistant", "content": "P"},
+        {"id": ANY, "role": "user", "content": QUERY, "created_at": ANY},
+        {"id": ANY, "role": "assistant", "content": "P", "created_at": ANY},
     ]
 
 
@@ -236,8 +244,8 @@ async def test_retrieve_chat_returns_session_with_messages(
     client: AsyncClient,
 ) -> None:
     messages = [
-        {"role": "user", "content": "Hi"},
-        {"role": "assistant", "content": "Hello!"},
+        build_message(MessageRole.user, "Hi"),
+        build_message(MessageRole.assistant, "Hello!"),
     ]
     chat_session = await SessionHistoryFactory.create(title="Hi", messages=messages)
 

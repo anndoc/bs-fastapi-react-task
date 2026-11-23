@@ -56,7 +56,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen bg-[#f7f8fc] p-3 text-slate-950 md:p-4">
-        <div className="mx-auto grid min-h-[calc(100vh-2rem)] max-w-[1800px] grid-cols-1 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:grid-cols-[minmax(340px,430px)_minmax(0,1fr)]">
+        <div className="mx-auto grid min-h-[calc(100vh-2rem)] max-w-[1800px] grid-cols-1 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:h-[calc(100vh-2rem)] lg:grid-cols-[minmax(340px,430px)_minmax(0,1fr)]">
           <Outlet />
         </div>
       </div>

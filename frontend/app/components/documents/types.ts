@@ -7,11 +7,7 @@ export type FileType = (typeof FILE_TYPES)[number];
 export const getFileType = (fileName: string): FileType | undefined =>
   FILE_TYPES.find((type) => fileName.toLowerCase().endsWith(`.${type}`));
 
-export type DocumentStatus =
-  | "pending"
-  | "processing"
-  | "completed"
-  | "failed";
+export type DocumentStatus = "pending" | "processing" | "completed" | "failed";
 
 export const STATUS_LABELS = {
   pending: "Pending",

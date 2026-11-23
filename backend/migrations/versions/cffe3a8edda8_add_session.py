@@ -26,9 +26,7 @@ def upgrade() -> None:
         sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column("modified_at", sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column(
-            "title", sqlmodel.AutoString(length=200), nullable=False
-        ),
+        sa.Column("title", sqlmodel.AutoString(length=200), nullable=False),
         sa.Column("messages", sa.JSON(), nullable=False),
         sa.Column("cancelled", sa.Boolean(), nullable=False),
         sa.PrimaryKeyConstraint("id"),

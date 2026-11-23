@@ -1,4 +1,4 @@
-# Technical Assessment: Senior Full-Stack Developer (FastAPI, React, RAG)
+# Technical Assessment: Full-Stack Developer (FastAPI, React, RAG)
 
 ## 1. Objective
 

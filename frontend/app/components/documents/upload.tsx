@@ -3,11 +3,11 @@ import { UploadCloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FILE_TYPES } from "@/components/documents/types";
 
-export default function Upload({
-  onFiles,
-}: {
+export type UploadProps = {
   onFiles: (files: FileList | File[]) => void;
-}) {
+};
+
+export default function Upload({ onFiles }: UploadProps) {
   const [dragging, setDragging] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 

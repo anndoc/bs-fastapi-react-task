@@ -1,10 +1,13 @@
+from datetime import UTC, datetime
+from uuid import uuid4
+
 from sqlalchemy import Float
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from agent.constants import MAX_COSINE_DISTANCE, RETRIEVAL_LIMIT, MessageRole
 from agent.models import SessionHistory
-from agent.schemas import Chunk, Source
+from agent.schemas import Chunk, Message, Source
 from documents.constants import DocumentStatus
 from documents.models import Document, Embedding
 from documents.tasks import embeddings
@@ -40,10 +43,10 @@ async def add_message(
     role: MessageRole,
     content: str,
 ) -> None:
+    message = Message(
+        id=uuid4(), role=role, content=content, created_at=datetime.now(UTC)
+    )
     # Reassigned, not appended: the plain JSON column doesn't track in-place changes.
-    chat_session.messages = [
-        *chat_session.messages,
-        {"role": role, "content": content},
-    ]
+    chat_session.messages = [*chat_session.messages, message.model_dump(mode="json")]
     session.add(chat_session)
     await session.commit()

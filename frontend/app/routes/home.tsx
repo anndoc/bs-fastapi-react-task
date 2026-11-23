@@ -2,9 +2,14 @@ import type { Route } from "./+types/home";
 import DocumentPanel from "@/components/documents/panel";
 import Chat from "@/components/agent/chat";
 import { documentList } from "@/lib/documents/api";
+import { history } from "@/lib/agent/api";
 
 export async function loader() {
-  return { documents: await documentList() };
+  const [documents, chatHistory] = await Promise.all([
+    documentList(),
+    history(),
+  ]);
+  return { documents, chatHistory };
 }
 
 export function meta() {
@@ -18,7 +23,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   return (
     <>
       <DocumentPanel initialDocuments={loaderData.documents} />
-      <Chat />
+      <Chat initialChatHistory={loaderData.chatHistory} />
     </>
   );
 }

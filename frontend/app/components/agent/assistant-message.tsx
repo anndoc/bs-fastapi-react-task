@@ -5,18 +5,13 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import type { AssistantMessageData } from "@/components/agent/types";
 
-export type AssistantMessageData = {
-  content: string;
-  time: string;
-  sources?: { name: string; pages: string }[];
+export type AssistantMessageProps = {
+  message: AssistantMessageData;
 };
 
-export default function AssistantMessage({
-  message,
-}: {
-  message: AssistantMessageData;
-}) {
+export default function AssistantMessage({ message }: AssistantMessageProps) {
   const [sourcesOpen, setSourcesOpen] = useState(true);
 
   return (
@@ -26,7 +21,15 @@ export default function AssistantMessage({
       </div>
       <div className="max-w-[min(720px,88%)]">
         <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm leading-relaxed shadow-sm">
-          <p className="whitespace-pre-line">{message.content}</p>
+          <p
+            className={
+              message.error
+                ? "whitespace-pre-line text-rose-600"
+                : "whitespace-pre-line"
+            }
+          >
+            {message.content}
+          </p>
           {message.sources && (
             <Collapsible
               open={sourcesOpen}
@@ -42,15 +45,27 @@ export default function AssistantMessage({
                   )}
                   Sources ({message.sources.length})
                 </span>
-                <span className="font-medium text-slate-600">Pages: 12–14</span>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="divide-y divide-slate-200 rounded-lg border-t border-slate-200 bg-white"></div>
+                <div className="divide-y divide-slate-200 rounded-lg border-t border-slate-200 bg-white">
+                  {message.sources.map((source) => (
+                    <div
+                      key={`${source.name}-${source.pages}`}
+                      className="flex items-center justify-between gap-3 px-3 py-2.5 text-xs"
+                    >
+                      <span className="truncate font-medium text-slate-700">
+                        {source.name}
+                      </span>
+                      <span className="shrink-0 text-slate-500">
+                        Pages: {source.pages}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </CollapsibleContent>
             </Collapsible>
           )}
         </div>
-        <p className="mt-1.5 pl-2 text-[11px] text-slate-500">{message.time}</p>
       </div>
     </div>
   );

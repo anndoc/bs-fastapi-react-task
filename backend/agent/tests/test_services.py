@@ -3,9 +3,9 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from agent.constants import RETRIEVAL_LIMIT, MessageRole
 from agent.models import SessionHistory
-from agent.schemas import Source
+from agent.schemas import Message, Source
 from agent.services import add_message, search_chunks
-from agent.tests.factories import SessionHistoryFactory
+from agent.tests.factories import SessionHistoryFactory, build_message
 from documents.constants import DocumentStatus
 from documents.tasks import embeddings
 from documents.tests.factories import DocumentFactory, EmbeddingFactory
@@ -85,15 +85,15 @@ async def test_search_chunks_returns_empty_list_without_documents(
 
 
 async def test_add_message_persists_appended_message(session: AsyncSession) -> None:
-    chat_session = await SessionHistoryFactory.create(
-        messages=[{"role": MessageRole.user, "content": "Hi"}]
-    )
+    previous = build_message(MessageRole.user, "Hi")
+    chat_session = await SessionHistoryFactory.create(messages=[previous])
 
     await add_message(session, chat_session, MessageRole.assistant, "Hello!")
 
     saved = await session.get(SessionHistory, chat_session.id, populate_existing=True)
     assert saved is not None
-    assert saved.messages == [
-        {"role": "user", "content": "Hi"},
-        {"role": "assistant", "content": "Hello!"},
-    ]
+    first, second = [Message.model_validate(message) for message in saved.messages]
+    assert first == Message.model_validate(previous)
+    assert (second.role, second.content) == (MessageRole.assistant, "Hello!")
+    assert second.id != first.id
+    assert second.created_at != first.created_at

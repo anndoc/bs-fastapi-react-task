@@ -1,23 +1,37 @@
-import { ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Document from "@/components/documents/document";
 import type { DocumentItem } from "@/components/documents/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const SORT_OPTIONS = { newest: "Newest first" } as const;
+
+export type DocumentListProps = {
+  documents: DocumentItem[];
+  onDelete: (id: string) => void;
+};
 
 export default function DocumentList({
   documents,
   onDelete,
-}: {
-  documents: DocumentItem[];
-  onDelete: (id: string) => void;
-}) {
+}: DocumentListProps) {
   return (
     <>
       <div className="mb-3 flex items-center justify-between gap-2">
         <h2 className="font-semibold">Your Documents ({documents.length})</h2>
-        <Button variant="outline" size="sm" className="gap-2">
-          Newest first <ChevronDown className="h-4 w-4" />
-        </Button>
+        <Select defaultValue="newest" items={SORT_OPTIONS}>
+          <SelectTrigger size="sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">{SORT_OPTIONS.newest}</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <Separator />
       <div className="divide-y divide-slate-100">

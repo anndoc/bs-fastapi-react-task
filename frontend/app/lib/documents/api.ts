@@ -5,11 +5,9 @@ import {
   type DocumentItem,
   type DocumentResponse,
 } from "@/components/documents/types";
-import { formatSize, formatUploaded } from "@/lib/documents/utils";
-
-// The browser goes through the Vite `/api` proxy; only SSR needs the absolute URL.
-const API_URL = import.meta.env.SSR ? process.env.API_URL : "";
-if (API_URL === undefined) throw new Error("API_URL is not set");
+import { formatSize } from "@/lib/documents/utils";
+import { formatRelativeTime } from "@/lib/format";
+import { DOCUMENT_URL } from "~/lib/constants";
 
 const toDocumentItem = (item: DocumentResponse): DocumentItem => {
   const type = getFileType(item.file_name);
@@ -18,25 +16,23 @@ const toDocumentItem = (item: DocumentResponse): DocumentItem => {
     id: item.id,
     name: item.file_name,
     size: formatSize(item.size),
-    uploaded: formatUploaded(item.modified_at),
+    uploaded: formatRelativeTime(item.modified_at, Date.now(), "Uploaded "),
     status: STATUS_LABELS[item.status],
     type,
   };
 };
 
-
 export async function documentList(): Promise<DocumentItem[]> {
-  const res = await fetch(`${API_URL}/api/documents/`);
+  const res = await fetch(DOCUMENT_URL);
   if (!res.ok) throw data("Failed to load documents", { status: res.status });
   const documents: DocumentResponse[] = await res.json();
   return documents.map(toDocumentItem);
 }
 
-
 export async function uploadDocument(file: File): Promise<DocumentItem> {
   const body = new FormData();
   body.append("file", file);
-  const res = await fetch(`${API_URL}/api/documents/`, {
+  const res = await fetch(DOCUMENT_URL, {
     method: "POST",
     body,
   });
@@ -53,7 +49,7 @@ export async function uploadDocument(file: File): Promise<DocumentItem> {
 }
 
 export async function deleteDocument(id: string): Promise<void> {
-  const res = await fetch(`${API_URL}/api/documents/${id}`, {
+  const res = await fetch(`${DOCUMENT_URL}${id}`, {
     method: "DELETE",
   });
   if (!res.ok && res.status !== 404) throw new Error("Delete failed");

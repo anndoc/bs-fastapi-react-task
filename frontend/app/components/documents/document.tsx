@@ -12,7 +12,8 @@ function StatusBadge({ status }: { status: DocumentStatusLabel }) {
   const styles: Record<DocumentStatusLabel, string> = {
     [STATUS_LABELS.pending]: "border-amber-200 bg-amber-50 text-amber-700",
     [STATUS_LABELS.processing]: "border-blue-200 bg-blue-50 text-blue-700",
-    [STATUS_LABELS.completed]: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    [STATUS_LABELS.completed]:
+      "border-emerald-200 bg-emerald-50 text-emerald-700",
     [STATUS_LABELS.failed]: "border-rose-200 bg-rose-50 text-rose-700",
   };
   return (
@@ -57,13 +58,12 @@ function FileGlyph({ type }: { type: FileType }) {
   );
 }
 
-export default function Document({
-  doc,
-  onDelete,
-}: {
+export type DocumentProps = {
   doc: DocumentItem;
   onDelete: (id: string) => void;
-}) {
+};
+
+export default function Document({ doc, onDelete }: DocumentProps) {
   return (
     <div className="flex items-center gap-3 py-3">
       <FileGlyph type={doc.type} />

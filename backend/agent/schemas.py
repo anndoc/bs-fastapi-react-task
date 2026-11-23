@@ -13,8 +13,10 @@ class SessionSummary(SQLModel, table=False):
 
 
 class Message(SQLModel, table=False):
+    id: UUID
     role: MessageRole
     content: str
+    created_at: datetime
 
 
 class SessionDetail(SessionSummary):

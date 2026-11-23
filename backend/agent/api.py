@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-model = FakeListChatModel(  # todo change it later
+model = FakeListChatModel(
     responses=[
         "Hello!",
         "How can I help you?",
@@ -44,7 +44,14 @@ async def chat(
     chat_session.title = chat_session.title or query[:TITLE_MAX_LENGTH]
     chat_session.cancelled = False
     await add_message(session, chat_session, MessageRole.user, query)
-    yield ServerSentEvent(event=ChatEvent.init, data={"session_id": chat_session.id})
+    yield ServerSentEvent(
+        event=ChatEvent.init,
+        data=SessionSummary(
+            id=chat_session.id,
+            title=chat_session.title,
+            modified_at=chat_session.modified_at,
+        ),
+    )
 
     answer = ""
     try:

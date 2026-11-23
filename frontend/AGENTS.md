@@ -8,7 +8,5 @@ make schema/design changes without asking first.
 - `DocumentResponse.status` (`DocumentStatus`) is the backend's background-processing
   status (`pending` → `processing` → `completed`/`failed`), not the state of the
   file upload. Don't reuse it to represent upload progress or upload errors.
-- Server data lives in the TanStack Query cache, not `useState`: the route
-  `loader` supplies `initialData`, mutations update via `setQueryData`.
 - The documents list prepends uploads and polls while any doc is pending/processing,
   so it relies on `GET /api/documents/`.
